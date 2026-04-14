@@ -169,8 +169,8 @@ describe('requestLocalFontAccess', () => {
     expect(result).toBe(true);
     expect(fm.nativeFontPermission).toBe('granted');
 
-    // Check localFontMap has entries
-    const map = (fm as unknown as { localFontMap: Map<string, unknown[]> }).localFontMap;
+    // Check nativeFontMap has entries
+    const map = (fm as unknown as { nativeFontMap: Map<string, unknown[]> }).nativeFontMap;
     expect(map.has('segoe ui')).toBe(true);
     expect(map.get('segoe ui')?.length).toBe(2);
 
@@ -269,14 +269,11 @@ describe('requestNativeFontAccess prompt-preservation', () => {
         throw new DOMException('Permission denied', 'NotAllowedError');
       },
     });
-
-    // Mock navigator.permissions.query to return 'prompt'
-    const origPermissions = navigator.permissions;
-    Object.defineProperty(navigator, 'permissions', {
-      value: {
+    // Stub navigator.permissions for Node.js test environment
+    vi.stubGlobal('navigator', {
+      permissions: {
         query: async () => ({ state: 'prompt' }),
       },
-      configurable: true,
     });
 
     const fm = new SkiaFontManager(makeMockCk() as never);
@@ -285,11 +282,6 @@ describe('requestNativeFontAccess prompt-preservation', () => {
     expect(result).toBe(false);
     expect(fm.nativeFontPermission).toBe('prompt');
 
-    // Restore
-    Object.defineProperty(navigator, 'permissions', {
-      value: origPermissions,
-      configurable: true,
-    });
     vi.unstubAllGlobals();
   });
 
@@ -299,14 +291,11 @@ describe('requestNativeFontAccess prompt-preservation', () => {
         throw new DOMException('Permission denied', 'NotAllowedError');
       },
     });
-
-    // Mock navigator.permissions.query to return 'denied'
-    const origPermissions = navigator.permissions;
-    Object.defineProperty(navigator, 'permissions', {
-      value: {
+    // Stub navigator.permissions for Node.js test environment
+    vi.stubGlobal('navigator', {
+      permissions: {
         query: async () => ({ state: 'denied' }),
       },
-      configurable: true,
     });
 
     const fm = new SkiaFontManager(makeMockCk() as never);
@@ -315,11 +304,6 @@ describe('requestNativeFontAccess prompt-preservation', () => {
     expect(result).toBe(false);
     expect(fm.nativeFontPermission).toBe('denied');
 
-    // Restore
-    Object.defineProperty(navigator, 'permissions', {
-      value: origPermissions,
-      configurable: true,
-    });
     vi.unstubAllGlobals();
   });
 });
